@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { getMedicamentos, crearMedicamento, actualizarMedicamento, eliminarMedicamento } from "../services/inventarioServices";
 import "../styles/medicamentos.css";
@@ -24,42 +23,30 @@ const MedicamentosEmpleado = () => {
     try {
       const data = await getMedicamentos();
       setMedicamentos(data);
-    } catch (error) {
-      console.error("Error al cargar medicamentos:", error);
-    } finally {
-      setLoading(false);
+    } catch {
+      console.error("Error al cargar medicamentos");
     }
+    setLoading(false);
   };
-  
 
-  const handleChange = (e) => {
+  const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      if (!formData.nombre || !formData.precio_venta || !formData.stock_actual) {
-        setMensaje("Debe completar todos los campos obligatorios.");
-        return;
-      }
       if (editando) {
         await actualizarMedicamento(editando, formData);
-        setMensaje("Medicamento actualizado correctamente");
+        setMensaje("Medicamento actualizado");
       } else {
         await crearMedicamento(formData);
-        setMensaje("Medicamento registrado correctamente");
+        setMensaje("Medicamento creado");
       }
       setFormData({ nombre: "", descripcion: "", precio_venta: "", stock_actual: "" });
       setEditando(null);
       cargarMedicamentos();
-    } catch (error) {
-      console.error("Error al guardar medicamento:", error);
-      if (error.response && error.response.data) {
-        setMensaje(JSON.stringify(error.response.data));
-      } else {
-        setMensaje("Ocurrió un error al guardar.");
-      }
+    } catch {
+      setMensaje("Error al guardar");
     }
   };
 
@@ -89,78 +76,45 @@ const MedicamentosEmpleado = () => {
 
   return (
     <div className="panel-empleado">
-      <h2 className="titulo">Gestión de Medicamentos</h2>
+      <h2>Gestión de Medicamentos</h2>
 
-      <form onSubmit={handleSubmit} className="formulario">
-        <input
-          type="text"
-          name="nombre"
-          placeholder="Nombre"
-          value={formData.nombre}
-          onChange={handleChange}
-          required
-        />
-        <input
-          type="text"
-          name="descripcion"
-          placeholder="Descripción"
-          value={formData.descripcion}
-          onChange={handleChange}
-        />
-        <input
-          type="number"
-          name="precio_venta"
-          placeholder="Precio"
-          value={formData.precio_venta}
-          onChange={handleChange}
-          required
-        />
-        <input
-          type="number"
-          name="stock_actual"
-          placeholder="Stock"
-          value={formData.stock_actual}
-          onChange={handleChange}
-          required
-        />
-        <button type="submit" className="btn-guardar">
-          {editando ? "Actualizar" : "Registrar"}
-        </button>
+      <form onSubmit={handleSubmit}>
+        <input name="nombre" placeholder="Nombre" value={formData.nombre} onChange={handleChange} required />
+        <input name="descripcion" placeholder="Descripción" value={formData.descripcion} onChange={handleChange} />
+        <input type="number" name="precio_venta" placeholder="Precio" value={formData.precio_venta} onChange={handleChange} required />
+        <input type="number" name="stock_actual" placeholder="Stock" value={formData.stock_actual} onChange={handleChange} required />
+
+        <button type="submit">{editando ? "Actualizar" : "Registrar"}</button>
       </form>
 
-      {mensaje && <p className="mensaje">{mensaje}</p>}
+      {mensaje && <p>{mensaje}</p>}
 
-      {loading ? (
-        <p>Cargando medicamentos...</p>
-      ) : (
-        <div className="tabla-container">
-          <table className="tabla-medicamentos">
-            <thead>
-              <tr>
-                <th>Nombre</th>
-                <th>Descripción</th>
-                <th>Precio</th>
-                <th>Stock</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {medicamentos.map((med) => (
-                <tr key={med.id}>
-                  <td>{med.nombre}</td>
-                  <td>{med.descripcion}</td>
-                  <td>${med.precio_venta}</td>
-                  <td>{med.stock_actual}</td>
-                  <td>
-                    <button className="btn-editar" onClick={() => handleEditar(med)}>Editar</button>
-                    <button className="btn-eliminar" onClick={() => handleEliminar(med.id)}>Eliminar</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <table className="tabla-medicamentos">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Descripción</th>
+            <th>Precio</th>
+            <th>Stock</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {medicamentos.map((m) => (
+            <tr key={m.id}>
+              <td>{m.nombre}</td>
+              <td>{m.descripcion}</td>
+              <td>{m.precio_venta}</td>
+              <td>{m.stock_actual}</td>
+              <td>
+                <button onClick={() => handleEditar(m)}>Editar</button>
+                <button onClick={() => handleEliminar(m.id)}>Eliminar</button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 };

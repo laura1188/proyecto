@@ -1,3 +1,5 @@
+from typing import Any
+from django.db.models import QuerySet
 from rest_framework import viewsets, generics, permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -10,42 +12,47 @@ from .serializers import FacturaSerializer, DetalleFacturaSerializer
 from .permissions import EsEmpleadoOAdministrador
 
 
-# ===============================
-# 🔹 CRUD de Facturas
-# ===============================
+# ======================================================
+# 🔹 CRUD DE FACTURAS (EMPLEADO + ADMIN)
+# ======================================================
 class FacturaViewSet(viewsets.ModelViewSet):
     queryset = Factura.objects.all().order_by('-fecha_emision')
     serializer_class = FacturaSerializer
     permission_classes = [EsEmpleadoOAdministrador]
 
-    def perform_create(self, serializer):
-        """Al crear una factura, asigna el empleado autenticado automáticamente"""
+    def perform_create(self, serializer) -> None:
+        """
+        Asigna automáticamente el empleado autenticado
+        al crear una factura.
+        """
         empleado = self.request.user if self.request.user.is_authenticated else None
         serializer.save(empleado=empleado)
 
 
-# ===============================
-# 🔹 CRUD de Detalles de Factura
-# ===============================
+# ======================================================
+# 🔹 CRUD DE DETALLES (PROTEGIDO)
+# ======================================================
 class DetalleFacturaViewSet(viewsets.ModelViewSet):
     queryset = DetalleFactura.objects.all()
     serializer_class = DetalleFacturaSerializer
     permission_classes = [EsEmpleadoOAdministrador]
 
 
-# ===============================
-# 🧾 Registrar Factura manual (versión APIView)
-# ===============================
+# ======================================================
+# 🧾 REGISTRO MANUAL DE FACTURA (USADO POR TU PANEL)
+# ======================================================
 class RegistrarFacturaView(APIView):
     permission_classes = [EsEmpleadoOAdministrador]
 
-    def post(self, request):
+    def post(self, request) -> Response:
         data = request.data
 
         try:
+            # Obtener cliente por ID
             cliente_id = data.get("cliente")
             cliente = get_object_or_404(Usuario, id=cliente_id)
 
+            # Crear factura
             factura = Factura.objects.create(
                 cliente=cliente,
                 empleado=request.user if request.user.is_authenticated else None,
@@ -55,10 +62,10 @@ class RegistrarFacturaView(APIView):
                 total=data.get("total", 0)
             )
 
+            # Crear detalles
             detalles = data.get("detalles", [])
             for d in detalles:
-                medicamento_id = d.get("medicamento")
-                medicamento = get_object_or_404(Medicamento, id=medicamento_id)
+                medicamento = get_object_or_404(Medicamento, id=d.get("medicamento"))
 
                 DetalleFactura.objects.create(
                     factura=factura,
@@ -67,9 +74,8 @@ class RegistrarFacturaView(APIView):
                     precio_unitario=d.get("precio_unitario", 0),
                     subtotal=d.get("subtotal", 0)
                 )
-
             return Response(
-                {"mensaje": "Factura registrada correctamente", "factura_id": factura.id},
+                {"mensaje": "Factura registrada correctamente", "factura_id": factura.cliente},
                 status=status.HTTP_201_CREATED
             )
 
@@ -77,56 +83,57 @@ class RegistrarFacturaView(APIView):
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
-# ===============================
-# 📋 Listar todas las facturas (empleados/admin)
-# ===============================
+# ======================================================
+# 📋 LISTAR TODAS LAS FACTURAS (ADMIN / EMPLEADO)
+# ======================================================
 class FacturaListView(generics.ListAPIView):
-    queryset = Factura.objects.all().order_by('-fecha_emision')
     serializer_class = FacturaSerializer
     permission_classes = [EsEmpleadoOAdministrador]
 
+    def get_queryset(self) -> QuerySet: # type: ignore
+        return Factura.objects.all().order_by('-fecha_emision')
 
-# ===============================
-# 💊 Listar Detalles
-# ===============================
+
+# ======================================================
+# 💊 LISTAR DETALLES
+# ======================================================
 class DetalleFacturaListView(generics.ListAPIView):
-    queryset = DetalleFactura.objects.all()
     serializer_class = DetalleFacturaSerializer
     permission_classes = [EsEmpleadoOAdministrador]
 
+    def get_queryset(self) -> QuerySet: # type: ignore
+        return DetalleFactura.objects.all()
 
-# ===============================
-# 🧍 Historial del Cliente autenticado
-# ===============================
+
+# ======================================================
+# 🧍 FACTURAS DEL CLIENTE AUTENTICADO
+# ======================================================
 class HistorialFacturasView(generics.ListAPIView):
     serializer_class = FacturaSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-    def get_queryset(self):
-        """Devuelve solo las facturas del cliente logueado"""
+    def get_queryset(self) -> QuerySet: # type: ignore
         return Factura.objects.filter(cliente=self.request.user).order_by('-fecha_emision')
 
 
-# ===============================
-# 👨‍💼 Facturas por rol del usuario autenticado
-# ===============================
+# ======================================================
+# 👨‍💼 FACTURAS SEGÚN EL ROL DEL USUARIO
+# ======================================================
 class MisFacturasView(generics.ListAPIView):
     serializer_class = FacturaSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-    def get_queryset(self):
+    def get_queryset(self) -> QuerySet: # type: ignore 
         user = self.request.user
+        rol = getattr(user, "rol", None)
 
-        if user.rol == "empleado":
-            # Facturas que registró el empleado
+        if rol == "empleado":
             return Factura.objects.filter(empleado=user).order_by('-fecha_emision')
 
-        elif user.rol == "administrador":
-            # Todas las facturas
+        if rol == "admin":
             return Factura.objects.all().order_by('-fecha_emision')
 
-        elif user.rol == "cliente":
-            # Solo las del cliente
+        if rol == "cliente":
             return Factura.objects.filter(cliente=user).order_by('-fecha_emision')
 
         return Factura.objects.none()

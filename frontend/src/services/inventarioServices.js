@@ -1,14 +1,41 @@
-// src/services/inventarioServices.js
-import api from "./api.js";
+// src/services/inventarioService.js
+import API from "./api.js";
 
-// ✅ Catálogo público (sin autenticación)
-export const getCatalogoPublico = () => api.get("/inventario/catalogo/");
+/* ===============================
+   📦 CATALOGO PÚBLICO (sin token)
+================================= */
+export const getCatalogoPublico = async () => {
+  const res = await API.get("/inventario/catalogo/");
+  return res.data;
+};
 
-// ✅ Categorías
-export const getCategorias = () => api.get("/inventario/categorias/");
+/* ===============================
+   📚 CATEGORÍAS
+================================= */
+export const getCategorias = async () => {
+  const res = await API.get("/inventario/categorias/");
+  return res.data;
+};
 
-// ✅ Medicamentos (CRUD protegido)
-export const getMedicamentos = () => api.get("/inventario/medicamentos/");
-export const crearMedicamento = (data) => api.post("/inventario/medicamentos/", data);
-export const actualizarMedicamento = (id, data) => api.put(`/inventario/medicamentos/${id}/`, data);
-export const eliminarMedicamento = (id) => api.delete(`/inventario/medicamentos/${id}/`);
+/* ===============================
+   💊 MEDICAMENTOS (CRUD protegido)
+================================= */
+export const getMedicamentos = async () => {
+  const res = await API.get("/inventario/medicamentos/");
+  return res.data;
+};
+
+export const crearMedicamento = async (data) => {
+  const res = await API.post("/inventario/medicamentos/", data);
+  return res.data;
+};
+
+export const actualizarMedicamento = async (id, data) => {
+  const res = await API.put(`/inventario/medicamentos/${id}/`, data);
+  return res.data;
+};
+
+export const eliminarMedicamento = async (id) => {
+  const res = await API.delete(`/inventario/medicamentos/${id}/`);
+  return res.data;
+};

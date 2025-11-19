@@ -1,24 +1,22 @@
 import React, { useState } from "react";
-import Sidebar from "./sidebar";
-import MedicamentosEmpleado from "./medicamentosEmpleado";
-import PanelEmpleado from "./panelFactura";
-import PanelPedidos from "./PanelPedidos"; // Importar correctamente la sección
-import "./empleadoDashboard.css";
+import Sidebar from "../components/Sidebar";
+import MedicamentosEmpleado from "../pages/MedicamentosEmpleado";
+import PanelFactura from "../pages/PanelFactura";
+import PanelPedidos from "../pages/PanelPedidos";
+import "../styles/empleadoDashboard.css";
 
-const EmpleadoDashboard = () => {
+export default function EmpleadoDashboard() {
   const [seccionActual, setSeccionActual] = useState("medicamentos");
 
   return (
     <div className="dashboard-container">
-      <Sidebar setSeccion={setSeccionActual} seccionActual={seccionActual} />
+      <Sidebar seccionActual={seccionActual} setSeccion={setSeccionActual} />
 
-      <div className="contenido-principal">
+      <div className="dashboard-content">
         {seccionActual === "medicamentos" && <MedicamentosEmpleado />}
-        {seccionActual === "facturas" && <PanelEmpleado />}
-        {seccionActual === "pedidos" && <PanelPedidos />} {/* Nueva sección */}
+        {seccionActual === "facturas" && <PanelFactura />}
+        {seccionActual === "pedidos" && <PanelPedidos />}
       </div>
     </div>
   );
-};
-
-export default EmpleadoDashboard;
+}

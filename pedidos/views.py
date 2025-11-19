@@ -96,7 +96,7 @@ class ActualizarPedidoView(APIView):
             # Si hay detalles, se reemplazan
             detalles_data = request.data.get("detalles_data", None)
             if detalles_data is not None:
-                pedido.detalles.all().delete()
+                pedido.detalles.all().delete() # type: ignore
                 for d in detalles_data:
                     DetallePedido.objects.create(
                         pedido=pedido,

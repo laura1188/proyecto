@@ -1,0 +1,137 @@
+/* 📌 CONTENEDOR PRINCIPAL */
+.panel-factura {
+    background: #ffffff;
+    padding: 30px;
+    margin: 40px auto;
+    width: 90%;
+    max-width: 1200px;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+/* 📌 TÍTULO */
+.panel-factura h2 {
+    font-size: 28px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* 📌 FORMULARIO SUPERIOR */
+.form-factura {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+/* Inputs */
+.form-factura input,
+.form-factura select,
+.form-factura textarea {
+    width: 100%;
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid #d1d5db;
+    background: #f9fafb;
+    transition: all 0.2s;
+    font-size: 15px;
+}
+
+.form-factura input:focus,
+.form-factura select:focus,
+.form-factura textarea:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 6px rgba(37, 99, 235, 0.4);
+}
+
+/* Textarea ocupando línea completa */
+.form-factura textarea {
+    grid-column: span 2;
+    min-height: 80px;
+}
+
+/* 📌 SECCIÓN DE DETALLES */
+.detalle-item {
+    display: grid;
+    grid-template-columns: 2fr 0.7fr 1fr 1fr auto;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: #f9fafb;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+}
+
+.detalle-item select,
+.detalle-item input {
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+    background: white;
+}
+
+/* Botón eliminar */
+.detalle-item button {
+    background: #ef4444;
+    color: white;
+    border: none;
+    padding: 8px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.detalle-item button:hover {
+    background: #dc2626;
+}
+
+/* 📌 BOTÓN AGREGAR DETALLE */
+.btn-add {
+    background: #2563eb;
+    color: white;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 15px;
+    cursor: pointer;
+    border: none;
+    width: fit-content;
+}
+
+.btn-add:hover {
+    background: #1d4ed8;
+}
+
+/* 📌 TOTAL */
+.panel-factura h2:last-of-type {
+    font-size: 24px;
+    margin-top: 10px;
+}
+
+/* 📌 BOTÓN REGISTRAR */
+.btn-registrar {
+    background: #059669;
+    padding: 12px 20px;
+    color: white;
+    font-size: 16px;
+    border-radius: 10px;
+    border: none;
+    width: fit-content;
+    cursor: pointer;
+}
+
+.btn-registrar:hover {
+    background: #047857;
+}
+
+/* Mensaje */
+.mensaje {
+    padding: 10px;
+    background: #d1fae5;
+    color: #065f46;
+    border-left: 4px solid #10b981;
+    border-radius: 8px;
+}
