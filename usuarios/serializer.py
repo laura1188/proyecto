@@ -9,8 +9,9 @@ Usuario = get_user_model()
 # SERIALIZER DE USUARIO
 # =========================
 class UsuarioSerializer(serializers.ModelSerializer):
-    # ✅ Si el usuario tiene una FK a Rol, muestra los datos del rol
-    rol_detalle = serializers.StringRelatedField(source="rol", read_only=True)
+
+    # ✔ Mostrar el label del rol (Administrador, Empleado, Cliente)
+    rol_detalle = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Usuario
@@ -22,13 +23,17 @@ class UsuarioSerializer(serializers.ModelSerializer):
             "nombre_completo",
             "telefono",
             "direccion",
-            "rol",           # puede ser FK o campo tipo CharField, según tu modelo
-            "rol_detalle",   # se mostrará solo para lectura
+            "rol",           # valor interno: admin, empleado, cliente
+            "rol_detalle",   # label: Administrador, Empleado, Cliente
             "num_doc",
         ]
         extra_kwargs = {
             "password": {"write_only": True}
         }
+
+    # ✔ Convierte el valor en su etiqueta definida en choices
+    def get_rol_detalle(self, obj):
+        return obj.get_rol_display()
 
     def create(self, validated_data):
         """Crear usuario con contraseña encriptada"""
@@ -53,7 +58,9 @@ class UsuarioSerializer(serializers.ModelSerializer):
 # =========================
 # SERIALIZER DE ROL
 # =========================
+
 class RolSerializer(serializers.ModelSerializer):
     class Meta:
         model = Rol
-        fields = "__all__"
+        fields = ['id', 'nombre', 'descripcion', 'activo']
+        read_only_fields = ['id']

@@ -8,6 +8,7 @@ export default function Usuarios() {
   const [loading, setLoading] = useState(false);
   const [openModal, setOpenModal] = useState(false);
   const [editing, setEditing] = useState(null);
+
   const [form, setForm] = useState({
     username: "",
     email: "",
@@ -17,7 +18,8 @@ export default function Usuarios() {
     direccion: "",
     rol: "cliente",
   });
-  const base = "/usuarios/usuarios/"; // viewset register path
+
+  const base = "/usuarios/usuarios/";
 
   useEffect(() => {
     fetchUsers();
@@ -27,9 +29,9 @@ export default function Usuarios() {
     setLoading(true);
     try {
       const res = await api.get(base);
-      setUsuarios(res.data);
+      setUsuarios(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
-      console.error(err);
+      console.error("Error al obtener usuarios:", err);
       alert("Error al cargar usuarios");
     } finally {
       setLoading(false);
@@ -66,27 +68,30 @@ export default function Usuarios() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     try {
       if (editing) {
         await api.put(`${base}${editing.id}/`, form);
       } else {
-        await api.post(`${base}`, form);
+        await api.post(base, form);
       }
+
       setOpenModal(false);
       fetchUsers();
     } catch (err) {
-      console.error(err);
+      console.error("Error al guardar usuario:", err);
       alert("Error al guardar usuario");
     }
   };
 
   const handleDeactivate = async (u) => {
-    if (!confirm("Inactivar usuario?")) return;
+    if (!window.confirm("¿Inactivar usuario?")) return;
+
     try {
       await api.delete(`${base}${u.id}/`);
       fetchUsers();
     } catch (err) {
-      console.error(err);
+      console.error("Error al inactivar:", err);
       alert("Error al inactivar");
     }
   };
@@ -153,22 +158,7 @@ export default function Usuarios() {
         open={openModal}
         title={editing ? "Editar Usuario" : "Crear Usuario"}
         onClose={() => setOpenModal(false)}
-        footer={
-          <>
-            <button
-              onClick={() => setOpenModal(false)}
-              className="px-4 py-2 rounded bg-gray-100"
-            >
-              Cancelar
-            </button>
-            <button
-              onClick={handleSubmit}
-              className="px-4 py-2 rounded bg-blue-600 text-white"
-            >
-              Guardar
-            </button>
-          </>
-        }
+        footer={null}
       >
         <form onSubmit={handleSubmit} className="space-y-3">
           <input
@@ -178,6 +168,7 @@ export default function Usuarios() {
             className="w-full px-3 py-2 border rounded"
             required
           />
+
           <input
             value={form.email}
             onChange={(e) => setForm({ ...form, email: e.target.value })}
@@ -186,6 +177,7 @@ export default function Usuarios() {
             className="w-full px-3 py-2 border rounded"
             required
           />
+
           <input
             value={form.password}
             onChange={(e) => setForm({ ...form, password: e.target.value })}
@@ -194,6 +186,7 @@ export default function Usuarios() {
             className="w-full px-3 py-2 border rounded"
             {...(!editing ? { required: true } : {})}
           />
+
           <input
             value={form.nombre_completo}
             onChange={(e) =>
@@ -202,18 +195,21 @@ export default function Usuarios() {
             placeholder="Nombre completo"
             className="w-full px-3 py-2 border rounded"
           />
+
           <input
             value={form.telefono}
             onChange={(e) => setForm({ ...form, telefono: e.target.value })}
             placeholder="Teléfono"
             className="w-full px-3 py-2 border rounded"
           />
+
           <input
             value={form.direccion}
             onChange={(e) => setForm({ ...form, direccion: e.target.value })}
             placeholder="Dirección"
             className="w-full px-3 py-2 border rounded"
           />
+
           <select
             value={form.rol}
             onChange={(e) => setForm({ ...form, rol: e.target.value })}
@@ -223,6 +219,23 @@ export default function Usuarios() {
             <option value="empleado">Empleado</option>
             <option value="admin">Administrador</option>
           </select>
+
+          <div className="flex justify-end gap-3 pt-4">
+            <button
+              onClick={() => setOpenModal(false)}
+              type="button"
+              className="px-4 py-2 rounded bg-gray-100"
+            >
+              Cancelar
+            </button>
+
+            <button
+              type="submit"
+              className="px-4 py-2 rounded bg-blue-600 text-white"
+            >
+              Guardar
+            </button>
+          </div>
         </form>
       </Modal>
     </div>

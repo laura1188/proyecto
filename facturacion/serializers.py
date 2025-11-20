@@ -32,6 +32,7 @@ class DetalleFacturaSerializer(serializers.ModelSerializer):
 # =========================
 class FacturaSerializer(serializers.ModelSerializer):
     cliente = serializers.PrimaryKeyRelatedField(queryset=Usuario.objects.all())   # 👈 ahora acepta ID de cliente
+    cliente_nombre = serializers.SerializerMethodField()  # 👈 agregar nombre del cliente
     detalles = DetalleFacturaSerializer(many=True, required=False)                # 👈 detalles anidados opcionales
 
     class Meta:
@@ -39,6 +40,7 @@ class FacturaSerializer(serializers.ModelSerializer):
         fields = [
             'id',
             'cliente',
+            'cliente_nombre',
             'empleado',
             'fecha_emision',
             'total',
@@ -48,7 +50,10 @@ class FacturaSerializer(serializers.ModelSerializer):
             'observaciones',
             'detalles',
         ]
-        read_only_fields = ['fecha_emision']
+        read_only_fields = ['fecha_emision', 'cliente_nombre']
+
+    def get_cliente_nombre(self, obj):
+        return obj.cliente.nombre_completo or obj.cliente.username
 
     # =========================
     # 🔹 Crear factura con detalles

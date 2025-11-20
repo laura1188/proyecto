@@ -39,8 +39,7 @@ export default function Mensajes() {
     try {
       const nuevaResena = {
         nombre: msg.nombre,
-        correo: msg.correo,
-        mensaje: msg.mensaje, // 👈 Usa el mismo campo que el modelo Django espera
+        comentario: msg.mensaje, // 👈 Campo correcto según el modelo Django (Resena.comentario)
         calificacion: 5, // Puedes hacerlo dinámico si lo deseas
       };
 

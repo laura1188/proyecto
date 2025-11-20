@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import api from "../services/api.js";
 import Modal from "../components/Modal";
+import { exportarFacturaAPDF } from "../services/pdfServices.js";
 
 export default function Facturas() {
   const [facturas, setFacturas] = useState([]);
@@ -32,6 +33,11 @@ export default function Facturas() {
     setOpen(true);
   };
 
+  // ✅ Descargar PDF con jsPDF
+  const descargarPDF = (factura) => {
+    exportarFacturaAPDF(factura, factura.detalles || []);
+  };
+
   return (
     <div className="p-6">
       <header className="flex items-center justify-between mb-6">
@@ -40,16 +46,22 @@ export default function Facturas() {
         <div className="flex gap-3">
           <button
             onClick={cargarFacturas}
-            className="px-4 py-2 bg-slate-100 rounded"
+            className="px-4 py-2 bg-slate-100 rounded hover:bg-slate-200"
           >
-            Refrescar
+            🔄 Refrescar
           </button>
 
           <button
-            onClick={() => alert("Función de exportar PDF aún no implementada")}
-            className="px-4 py-2 bg-amber-500 text-white rounded"
+            onClick={() => {
+              if (selected) {
+                descargarPDF(selected);
+              } else {
+                alert("Seleccione una factura primero");
+              }
+            }}
+            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
           >
-            Exportar PDF
+            📥 Descargar PDF
           </button>
         </div>
       </header>
@@ -68,17 +80,23 @@ export default function Facturas() {
 
           <tbody>
             {facturas.map((f) => (
-              <tr key={f.id} className="border-t">
+              <tr key={f.id} className="border-t hover:bg-slate-50 cursor-pointer">
                 <td className="py-2">{f.id}</td>
-                <td>{f.cliente}</td>
+                <td>{f.cliente_nombre || f.cliente}</td>
                 <td>{new Date(f.fecha_emision).toLocaleString()}</td>
-                <td>${f.total}</td>
-                <td>
+                <td className="font-semibold">${f.total}</td>
+                <td className="flex gap-2">
                   <button
                     onClick={() => showDetails(f)}
-                    className="px-3 py-1 bg-blue-600 text-white rounded"
+                    className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
                   >
-                    Ver
+                    👁️ Ver
+                  </button>
+                  <button
+                    onClick={() => descargarPDF(f)}
+                    className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+                  >
+                    📥 PDF
                   </button>
                 </td>
               </tr>
