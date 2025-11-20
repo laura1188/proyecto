@@ -16,7 +16,8 @@ class Pedido(models.Model):
     total = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
     def __str__(self):
-        return f"Pedido #{self.cliente} - {self.cliente.username}"
+        return f"Pedido #{self.id} - {self.cliente.username}"
+
 
 class DetallePedido(models.Model):
     pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE, related_name="detalles")

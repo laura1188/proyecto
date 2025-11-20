@@ -10,6 +10,8 @@ from inventario.models import Medicamento
 from usuarios.models import Usuario
 from .serializers import FacturaSerializer, DetalleFacturaSerializer
 from .permissions import EsEmpleadoOAdministrador
+from .utils.pdf_generator import generar_pdf_factura
+from django.core.mail import EmailMessage
 
 
 # ======================================================
@@ -137,3 +139,34 @@ class MisFacturasView(generics.ListAPIView):
             return Factura.objects.filter(cliente=user).order_by('-fecha_emision')
 
         return Factura.objects.none()
+
+
+
+class EnviarFacturaEmailView(APIView):
+    permission_classes = [permissions.IsAuthenticated]  # Solo empleados/admins
+
+    def post(self, request, factura_id):
+        factura = get_object_or_404(Factura, id=factura_id)
+
+        if not factura.cliente.email:
+            return Response({"error": "El cliente no tiene correo registrado."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Generar PDF
+        pdf_buffer = generar_pdf_factura(factura)
+
+        # Crear email
+        email = EmailMessage(
+            subject=f"Factura #{factura.id}",
+            body=f"Estimado/a {factura.cliente.username},\nAdjuntamos su factura #{factura.id}.",
+            from_email="tu_correo@dominio.com",
+            to=[factura.cliente.email],
+        )
+        email.attach(f"factura_{factura.id}.pdf", pdf_buffer.read(), "application/pdf")
+
+        try:
+            email.send()
+            factura.correo_enviado = True
+            factura.save()
+            return Response({"mensaje": "Factura enviada por email correctamente"})
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

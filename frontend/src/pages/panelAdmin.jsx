@@ -60,7 +60,7 @@ export default function PanelAdmin() {
               seccion === "usuarios" ? "bg-white/10" : ""
             }`}
           >
-            <Users size={18} /> Usuarios
+            <Users size={18} /> usuarios
           </button>
 
           <button

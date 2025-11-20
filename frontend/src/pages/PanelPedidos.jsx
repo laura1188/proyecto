@@ -9,11 +9,8 @@ import {
   ClipboardList,
   Clock,
 } from "lucide-react";
-import {
-  obtenerPedidos,
-  cambiarEstadoPedido,
-} from "../services/pedidosServices.js";
-import "../styles/pedidos.css";
+import { obtenerPedidos, cambiarEstadoPedido } from "../services/pedidosServices.js";
+import "../styles/empleadoDashboard.css"; // estilos actualizados
 
 export default function PanelPedidos() {
   const [pedidos, setPedidos] = useState([]);
@@ -30,7 +27,7 @@ export default function PanelPedidos() {
     setError(null);
     try {
       const data = await obtenerPedidos();
-      setPedidos(data);
+      setPedidos(data || []);
     } catch (e) {
       console.error("Error cargando pedidos:", e);
       setError("Error al cargar pedidos. Intenta de nuevo.");
@@ -42,17 +39,34 @@ export default function PanelPedidos() {
   const handleCambiarEstado = async (pedidoId, nuevoEstado) => {
     if (!window.confirm(`¿Cambiar estado a "${nuevoEstado}"?`)) return;
     setUpdatingId(pedidoId);
+
     try {
-      await cambiarEstadoPedido(pedidoId, { estado: nuevoEstado });
-      // actualizar localmente para respuesta instantánea
+      await cambiarEstadoPedido(pedidoId, nuevoEstado);
       setPedidos((prev) =>
-        prev.map((p) => (p.id === pedidoId ? { ...p, estado: nuevoEstado } : p))
+        prev.map((p) =>
+          p.id === pedidoId ? { ...p, estado: nuevoEstado } : p
+        )
       );
     } catch (e) {
       console.error("Error cambiando estado:", e);
       alert("No se pudo cambiar el estado.");
     } finally {
       setUpdatingId(null);
+    }
+  };
+
+  const getEstadoClass = (estado) => {
+    switch (estado) {
+      case "pendiente":
+        return "badge-pendiente";
+      case "procesado":
+        return "badge-en-proceso";
+      case "entregado":
+        return "badge-completado";
+      case "cancelado":
+        return "badge-cancelado";
+      default:
+        return "badge-default";
     }
   };
 
@@ -83,99 +97,125 @@ export default function PanelPedidos() {
         </button>
       </div>
 
+      {/* 🔥 ESTA ES LA CORRECCIÓN PARA ACOMODAR LAS CARDS */}
       <div className="grid-pedidos">
         {pedidos.map((pedido) => (
           <motion.article
-            className="pedido-card"
+            className="pedido-card profesional"
             key={pedido.id}
-            initial={{ opacity: 0, y: 8 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             whileHover={{ scale: 1.02 }}
-            transition={{ duration: 0.22 }}
+            transition={{ duration: 0.2 }}
           >
             <header className="pedido-header">
               <h3>
                 <Package className="inline-icon" /> Pedido #{pedido.id}
               </h3>
-              <span className={`badge estado ${pedido.estado}`}>
-                {pedido.estado}
+              <span className={`badge ${getEstadoClass(pedido.estado)}`}>
+                {pedido.estado.replace("_", " ")}
               </span>
             </header>
 
             <div className="pedido-meta">
               <p>
-                <User className="inline-icon" />{" "}
-                <strong>Cliente:</strong> {pedido.cliente || "Desconocido"}
+                <User className="inline-icon" /> <strong>Cliente:</strong>{" "}
+                {pedido.cliente || "Desconocido"}
               </p>
-
               <p>
-                <MapPin className="inline-icon" />{" "}
-                <strong>Dirección:</strong>{" "}
+                <MapPin className="inline-icon" /> <strong>Dirección:</strong>{" "}
                 {pedido.direccion_entrega || "Sin dirección"}
               </p>
-
               <p>
-                <Calendar className="inline-icon" />{" "}
-                <strong>Creado:</strong>{" "}
+                <Calendar className="inline-icon" /> <strong>Creado:</strong>{" "}
                 {new Date(pedido.fecha_creacion).toLocaleString()}
               </p>
-
               {pedido.fecha_entrega && (
                 <p>
-                  <Calendar className="inline-icon" />{" "}
-                  <strong>Entrega:</strong>{" "}
+                  <Calendar className="inline-icon" /> <strong>Entrega:</strong>{" "}
                   {new Date(pedido.fecha_entrega).toLocaleString()}
                 </p>
               )}
             </div>
 
             <div className="pedido-observaciones">
-              <strong>Observaciones:</strong>{" "}
-              {pedido.observaciones || "Ninguna"}
+              <strong>Observaciones:</strong> {pedido.observaciones || "Ninguna"}
             </div>
 
             <div className="pedido-detalles">
               <strong>Detalles:</strong>
               <ul>
-                {pedido.detalles.map((d) => (
-                  <li key={d.id}>
-                    {d.medicamento?.nombre || "Producto desconocido"} —{" "}
-                    <span className="cantidad">x{d.cantidad}</span>
-                  </li>
-                ))}
+                {Array.isArray(pedido.detalles) &&
+                  pedido.detalles.map((d) => (
+                    <li key={d.id}>
+                      {d.medicamento?.nombre || "Producto desconocido"} —{" "}
+                      <span className="cantidad">x{d.cantidad}</span>
+                    </li>
+                  ))}
               </ul>
+            </div>
+
+            <div className="pedido-total">
+              <strong>Total:</strong>{" "}
+              {pedido.total
+                ? Number(pedido.total).toLocaleString("es-CO", {
+                    style: "currency",
+                    currency: "COP",
+                  })
+                : "$0.00"}
             </div>
 
             <footer className="pedido-actions">
               <div className="acciones-left">
                 <button
                   className="btn-ghost"
-                  onClick={() => navigator.clipboard?.writeText(JSON.stringify(pedido))}
-                  title="Copiar JSON"
+                  onClick={async () => {
+                    try {
+                      await navigator.clipboard.writeText(
+                        JSON.stringify(pedido, null, 2)
+                      );
+                      alert("Pedido copiado al portapapeles.");
+                    } catch {
+                      alert("No se pudo copiar el pedido.");
+                    }
+                  }}
                 >
                   Copiar
                 </button>
                 <button
                   className="btn-ghost"
-                  onClick={() => window.alert(`Detalles del pedido #${pedido.id}`)}
+                  onClick={() =>
+                    window.alert(
+                      `Detalles del pedido #${pedido.id}\n\n${JSON.stringify(
+                        pedido,
+                        null,
+                        2
+                      )}`
+                    )
+                  }
                 >
                   Ver
                 </button>
               </div>
 
               <div className="acciones-right">
-                {/* botones de transición de estado - se muestran condicionalmente */}
-                {pedido.estado !== "completado" && (
-                  <button
-                    className="btn-primary"
-                    disabled={updatingId === pedido.id}
-                    onClick={() =>
-                      handleCambiarEstado(pedido.id, pedido.estado === "pendiente" ? "en_proceso" : "completado")
-                    }
-                  >
-                    {updatingId === pedido.id ? "..." : "Siguiente estado"}
-                  </button>
-                )}
+                {pedido.estado !== "entregado" &&
+                  pedido.estado !== "cancelado" && (
+                    <button
+                      className="btn-primary"
+                      disabled={updatingId === pedido.id}
+                      onClick={() =>
+                        handleCambiarEstado(
+                          pedido.id,
+                          pedido.estado === "pendiente"
+                            ? "procesado"
+                            : "entregado"
+                        )
+                      }
+                    >
+                      {updatingId === pedido.id ? "..." : "Siguiente estado"}
+                    </button>
+                  )}
               </div>
             </footer>
           </motion.article>

@@ -8,7 +8,8 @@ from .views import (
     FacturaListView,
     DetalleFacturaListView,
     HistorialFacturasView,
-    MisFacturasView
+    MisFacturasView,
+    EnviarFacturaEmailView
 )
 
 router = DefaultRouter()
@@ -28,4 +29,6 @@ urlpatterns = [
     # Facturas según usuario autenticado
     path('cliente/historial/', HistorialFacturasView.as_view(), name='historial-cliente'),
     path('mis-facturas/', MisFacturasView.as_view(), name='mis-facturas'),
+
+    path("facturas/enviar-email/<int:factura_id>/", EnviarFacturaEmailView.as_view(), name="enviar-factura-email"),
 ]

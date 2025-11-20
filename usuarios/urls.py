@@ -23,6 +23,7 @@ urlpatterns = [
     path("perfil/", perfil_usuario, name="perfil_usuario"),
     path("recuperar/", solicitar_recuperacion, name="solicitar_recuperacion"),
     path("cambiar-contrasena/", cambiar_contrasena, name="cambiar_contrasena"),
+    path("editar-usuario/<int:pk>/", UsuarioViewSet.as_view({'put': 'update'}), name="editar_usuario"),
 
     # 🔹 Endpoints del router (CRUDs)
     path("", include(router.urls)),

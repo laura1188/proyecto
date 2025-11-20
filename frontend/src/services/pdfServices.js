@@ -3,7 +3,7 @@ import jsPDF from "jspdf";
 
 export const exportarFacturaAPDF = (factura, detalles = []) => {
   try {
-    console.log("📄 Generando factura #" + factura.id);
+    console.log(" Generando factura #" + factura.id);
 
     if (!factura || !factura.id) {
       throw new Error("Datos de factura inválidos");
@@ -187,7 +187,7 @@ export const exportarFacturaAPDF = (factura, detalles = []) => {
     const nombreArchivo = `Factura_MIMS_${factura.id}.pdf`;
     doc.save(nombreArchivo);
 
-    console.log("📄 PDF generado:", nombreArchivo);
+    console.log(" PDF generado:", nombreArchivo);
     return true;
   } catch (error) {
     console.error("❌ Error PDF:", error);

@@ -48,7 +48,7 @@ export default function Facturas() {
             onClick={cargarFacturas}
             className="px-4 py-2 bg-slate-100 rounded hover:bg-slate-200"
           >
-            🔄 Refrescar
+             Refrescar
           </button>
 
           <button
@@ -61,7 +61,7 @@ export default function Facturas() {
             }}
             className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
           >
-            📥 Descargar PDF
+             Descargar PDF
           </button>
         </div>
       </header>
@@ -90,13 +90,13 @@ export default function Facturas() {
                     onClick={() => showDetails(f)}
                     className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
                   >
-                    👁️ Ver
+                    Ver
                   </button>
                   <button
                     onClick={() => descargarPDF(f)}
                     className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
                   >
-                    📥 PDF
+                     PDF
                   </button>
                 </td>
               </tr>

@@ -5,6 +5,8 @@ import { User, Edit, ShoppingBag } from "lucide-react";
 
 export default function PerfilCliente() {
   const [usuario, setUsuario] = useState(null);
+  const [formData, setFormData] = useState({});
+  const [editMode, setEditMode] = useState(false);
   const [facturas, setFacturas] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -17,8 +19,12 @@ export default function PerfilCliente() {
 
         const perfilRes = await axios.get("http://localhost:8000/api/usuarios/perfil/", config);
         setUsuario(perfilRes.data);
+        setFormData(perfilRes.data);
 
-        const facturasRes = await axios.get("http://localhost:8000/api/facturas/historial/", config);
+        const facturasRes = await axios.get(
+          "http://localhost:8000/api/facturas/cliente/historial/",
+          config
+        );
         setFacturas(facturasRes.data);
       } catch (error) {
         console.error("Error al cargar perfil:", error);
@@ -31,6 +37,32 @@ export default function PerfilCliente() {
     fetchData();
   }, [navigate]);
 
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  const guardarCambios = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+
+     const res = await axios.put(
+       `http://localhost:8000/api/usuarios/editar-usuario/${usuario.id}/`,
+       formData,
+       config
+    );
+
+
+      setUsuario(res.data);
+      setEditMode(false);
+      alert("Perfil actualizado correctamente");
+    } catch (error) {
+      console.error("Error actualizando perfil:", error);
+      alert("Error al actualizar perfil");
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen text-blue-700 text-lg">
@@ -42,26 +74,53 @@ export default function PerfilCliente() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-white flex items-center justify-center p-8">
       <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-xl w-full max-w-5xl p-8">
-        {/* 🔹 Encabezado del perfil */}
+        {/* Encabezado del perfil */}
         <div className="flex items-center justify-between border-b pb-6 mb-6">
           <div className="flex items-center gap-5">
             <div className="w-20 h-20 rounded-full bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center shadow-lg">
               <User className="text-white" size={40} />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-blue-800">
-                {usuario?.nombre_completo || usuario?.username}
-              </h2>
-              <p className="text-gray-500">{usuario?.email}</p>
+              {editMode ? (
+                <input
+                  type="text"
+                  name="nombre_completo"
+                  value={formData.nombre_completo || ""}
+                  onChange={handleChange}
+                  className="border px-2 py-1 rounded w-full text-xl font-bold text-blue-800"
+                />
+              ) : (
+                <h2 className="text-2xl font-bold text-blue-800">
+                  {usuario?.nombre_completo || usuario?.username}
+                </h2>
+              )}
+              {editMode ? (
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email || ""}
+                  onChange={handleChange}
+                  className="border px-2 py-1 rounded w-full text-gray-500 mt-1"
+                />
+              ) : (
+                <p className="text-gray-500">{usuario?.email}</p>
+              )}
             </div>
           </div>
-          <button className="bg-blue-500 text-white px-5 py-2 rounded-lg font-medium hover:bg-blue-600 flex items-center gap-2 transition">
+
+          <button
+            className="bg-blue-500 text-white px-5 py-2 rounded-lg font-medium hover:bg-blue-600 flex items-center gap-2 transition"
+            onClick={() => {
+              if (editMode) guardarCambios();
+              else setEditMode(true);
+            }}
+          >
             <Edit size={18} />
-            Editar
+            {editMode ? "Guardar" : "Editar"}
           </button>
         </div>
 
-        {/* 🔹 Información del usuario */}
+        {/* Información del usuario */}
         <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6 mb-8">
           <div>
             <label className="block text-sm text-gray-500">Usuario</label>
@@ -73,16 +132,35 @@ export default function PerfilCliente() {
           </div>
           <div>
             <label className="block text-sm text-gray-500">Teléfono</label>
-            <p className="text-gray-800 font-medium">{usuario?.telefono || "—"}</p>
+            {editMode ? (
+              <input
+                type="text"
+                name="telefono"
+                value={formData.telefono || ""}
+                onChange={handleChange}
+                className="border px-2 py-1 rounded w-full"
+              />
+            ) : (
+              <p className="text-gray-800 font-medium">{usuario?.telefono || "—"}</p>
+            )}
           </div>
           <div>
             <label className="block text-sm text-gray-500">Dirección</label>
-            <p className="text-gray-800 font-medium">{usuario?.direccion || "—"}</p>
+            {editMode ? (
+              <input
+                type="text"
+                name="direccion"
+                value={formData.direccion || ""}
+                onChange={handleChange}
+                className="border px-2 py-1 rounded w-full"
+              />
+            ) : (
+              <p className="text-gray-800 font-medium">{usuario?.direccion || "—"}</p>
+            )}
           </div>
         </div>
 
-        {/* 🧾 HISTORIAL DE COMPRAS (facturas) */}
-        {/* 🔸 ESTE ES EL BLOQUE DEL HISTORIAL DE FACTURAS 🔸 */}
+        {/* Historial de compras */}
         <div>
           <h3 className="text-xl font-semibold text-green-700 mb-4 flex items-center gap-2">
             <ShoppingBag size={22} /> Historial de Compras
