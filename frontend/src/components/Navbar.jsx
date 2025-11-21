@@ -1,10 +1,10 @@
 // src/components/Navbar.jsx
-import React from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Pill } from "lucide-react";
 
 export default function Navbar() {
   const navigate = useNavigate();
+  const location = useLocation();
   const usuario = JSON.parse(localStorage.getItem("usuario") || "{}");
   const token = localStorage.getItem("token");
 
@@ -14,10 +14,9 @@ export default function Navbar() {
     navigate("/login");
   };
 
-  // Si es empleado o cliente logueado, no mostrar navbar
-  if (token && (usuario.rol === "empleado" || usuario.rol === "cliente")) {
-    return null;
-  }
+  // Ocultar navbar en rutas específicas
+  const ocultarEn = ["/login", "/registro", "/perfilCliente", "/panelEmpleado", "/panelAdmin"];
+  if (ocultarEn.includes(location.pathname)) return null;
 
   return (
     <nav className="bg-blue-700 text-white px-8 py-4 flex justify-between items-center shadow-md sticky top-0 z-50">
