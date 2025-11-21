@@ -14,6 +14,11 @@ export default function Navbar() {
     navigate("/login");
   };
 
+  // Si es empleado o cliente logueado, no mostrar navbar
+  if (token && (usuario.rol === "empleado" || usuario.rol === "cliente")) {
+    return null;
+  }
+
   return (
     <nav className="bg-blue-700 text-white px-8 py-4 flex justify-between items-center shadow-md sticky top-0 z-50">
       {/* Logo y nombre */}
@@ -35,6 +40,9 @@ export default function Navbar() {
         </Link>
         <Link to="/contacto" className="hover:text-pink-200 transition">
           Contacto
+        </Link>
+        <Link to="/catalogo" className="hover:text-pink-200 transition">
+          Catálogo
         </Link>
 
         {/* Solo visible si el usuario es admin */}

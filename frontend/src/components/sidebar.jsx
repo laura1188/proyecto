@@ -1,6 +1,6 @@
-import React from "react";
+import React from "react"; 
 import "../styles/sidebar.css";
-import { Pill, FileText, Package } from "lucide-react";
+import { Pill, FileText, Package, LogOut } from "lucide-react";
 
 const Sidebar = ({ seccionActual, setSeccion }) => {
   const items = [
@@ -8,6 +8,13 @@ const Sidebar = ({ seccionActual, setSeccion }) => {
     { id: "facturas", nombre: "Facturas", icono: <FileText size={20} /> },
     { id: "pedidos", nombre: "Pedidos", icono: <Package size={20} /> },
   ];
+
+  // Función de logout
+  const handleLogout = () => {
+    localStorage.removeItem("usuario");
+    localStorage.removeItem("token");
+    window.location.href = "/login"; // redirige al login
+  };
 
   return (
     <aside className="sidebar">
@@ -26,6 +33,11 @@ const Sidebar = ({ seccionActual, setSeccion }) => {
           </li>
         ))}
       </ul>
+
+      {/* Botón de logout */}
+      <button className="sidebar-logout" onClick={handleLogout}>
+        <LogOut size={20} /> Cerrar sesión
+      </button>
     </aside>
   );
 };

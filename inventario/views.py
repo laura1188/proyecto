@@ -1,12 +1,12 @@
 from rest_framework import viewsets, generics, permissions
 from .models import Medicamento, Categoria, MovimientoInventario
+from .serializer import MedicamentoSerializer, CategoriaSerializer, CategoriaConMedicamentosSerializer
 from .serializer import (
     MedicamentoSerializer,
     CategoriaSerializer,
     MovimientoInventarioSerializer
 )
 from .permissions import EsEmpleadoOPermisoAdmin
-
 
 # =========================
 # 🧩 CRUD DE CATEGORÍAS
@@ -21,7 +21,6 @@ class CategoriaViewSet(viewsets.ModelViewSet):
         instance.activo = False
         instance.save()
 
-
 # =========================
 # 💊 CRUD DE MEDICAMENTOS
 # =========================
@@ -35,7 +34,6 @@ class MedicamentoViewSet(viewsets.ModelViewSet):
         instance.estado = False
         instance.save()
 
-
 # =========================
 # 📦 CRUD DE MOVIMIENTOS DE INVENTARIO
 # =========================
@@ -43,7 +41,6 @@ class MovimientoInventarioViewSet(viewsets.ModelViewSet):
     queryset = MovimientoInventario.objects.all()
     serializer_class = MovimientoInventarioSerializer
     permission_classes = [EsEmpleadoOPermisoAdmin]
-
 
 # =========================
 # 🔐 VISTAS BASADAS EN GENERICS
@@ -55,13 +52,11 @@ class MedicamentoListView(generics.ListAPIView):
     serializer_class = MedicamentoSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-
 # 🔹 Crear medicamento
 class MedicamentoCreateView(generics.CreateAPIView):
     queryset = Medicamento.objects.all()
     serializer_class = MedicamentoSerializer
     permission_classes = [EsEmpleadoOPermisoAdmin]
-
 
 # 🔹 Ver, actualizar o eliminar medicamento
 class MedicamentoDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -69,18 +64,19 @@ class MedicamentoDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = MedicamentoSerializer
     permission_classes = [EsEmpleadoOPermisoAdmin]
 
-
-# 🔹 Catálogo público (sin login)
 class MedicamentoListPublicAPIView(generics.ListAPIView):
     queryset = Medicamento.objects.filter(estado=True)
     serializer_class = MedicamentoSerializer
     permission_classes = [permissions.AllowAny]
 
+# 🔹 Lista de categorías activas
+class CategoriaListPublicAPIView(generics.ListAPIView):
+    queryset = Categoria.objects.filter(activo=True)
+    serializer_class = CategoriaSerializer
+    permission_classes = [permissions.AllowAny]
 
-# =========================
-# 💊 Catálogo alternativo (nombre descriptivo)
-# =========================
-class MedicamentoCatalogoPublico(generics.ListAPIView):
-    queryset = Medicamento.objects.filter(estado=True)
-    serializer_class = MedicamentoSerializer
+# 🔹 Opcional: Categorías con sus medicamentos anidados
+class CategoriaConMedicamentosListAPIView(generics.ListAPIView):
+    queryset = Categoria.objects.filter(activo=True)
+    serializer_class = CategoriaConMedicamentosSerializer
     permission_classes = [permissions.AllowAny]

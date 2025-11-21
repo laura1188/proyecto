@@ -8,6 +8,8 @@ from .views import (
     MedicamentoCreateView,
     MedicamentoDetailView,
     MedicamentoListPublicAPIView,
+    CategoriaListPublicAPIView,
+    CategoriaConMedicamentosListAPIView,  # nueva vista anidada
 )
 
 # =========================
@@ -29,7 +31,9 @@ urlpatterns = [
 
     # 🔹 API pública (catálogo)
     path("catalogo/", MedicamentoListPublicAPIView.as_view(), name="catalogo_api"),
+    path("catalogo/categorias/", CategoriaListPublicAPIView.as_view(), name="catalogo_categorias"),
+    path("catalogo/categorias-con-medicamentos/", CategoriaConMedicamentosListAPIView.as_view(), name="catalogo_categorias_anidadas"),
 
-    # 🔹 Incluye las rutas automáticas del router
+    # 🔹 Incluye las rutas automáticas del router (CRUD)
     path("", include(router.urls)),
 ]

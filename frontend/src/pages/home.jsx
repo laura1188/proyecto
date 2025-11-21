@@ -1,32 +1,46 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react"; 
 import { motion } from "framer-motion";
 import axios from "axios";
 
 export default function Home() {
   const [productos, setProductos] = useState([]);
+  const [categorias, setCategorias] = useState([]);
   const [carrito, setCarrito] = useState([]);
   const [carritoOpen, setCarritoOpen] = useState(false);
 
-  // ============================
-  // 🔐 Obtener TOKEN si existe
-  // ============================
-  const token = localStorage.getItem("token");
+  // filtros
+  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState(null);
+  const [busqueda, setBusqueda] = useState("");
+  const [precioMax, setPrecioMax] = useState("");
 
+  const token = localStorage.getItem("token");
   const API_PEDIDOS = "http://127.0.0.1:8000/api/pedidos/crud/";
 
+  // ==========================
+  // Cargar productos y categorías
+  // ==========================
   useEffect(() => {
     axios
-      .get("http://127.0.0.1:8000/api/inventario/catalogo/")
+      .get("http://localhost:8000/api/inventario/catalogo/")
       .then((res) => setProductos(res.data))
       .catch((err) => console.error("Error al cargar medicamentos:", err));
+
+    axios
+      .get("http://localhost:8000/api/inventario/categorias/")
+      .then((res) => setCategorias(res.data))
+      .catch((err) => console.error("Error al cargar categorías:", err));
   }, []);
 
-  // ============================
-  // ➕ Agregar medicamento al carrito
-  // ============================
+  // ==========================
+  // Funciones de carrito con login requerido
+  // ==========================
   const agregarAlCarrito = (producto) => {
-    const existe = carrito.find((p) => p.id === producto.id);
+    if (!token) {
+      alert("Debes iniciar sesión para agregar productos al pedido.");
+      return;
+    }
 
+    const existe = carrito.find((p) => p.id === producto.id);
     if (existe) {
       setCarrito(
         carrito.map((p) =>
@@ -38,29 +52,22 @@ export default function Home() {
     }
   };
 
-  // ============================
-  // ➖ Reducir cantidad
-  // ============================
   const reducirCantidad = (id) => {
     setCarrito(
       carrito
-        .map((p) =>
-          p.id === id ? { ...p, cantidad: p.cantidad - 1 } : p
-        )
+        .map((p) => (p.id === id ? { ...p, cantidad: p.cantidad - 1 } : p))
         .filter((p) => p.cantidad > 0)
     );
   };
 
-  // ============================
-  // 🗑 Eliminar producto
-  // ============================
-  const eliminar = (id) =>
-    setCarrito(carrito.filter((p) => p.id !== id));
+  const eliminar = (id) => setCarrito(carrito.filter((p) => p.id !== id));
 
-  // ============================
-  // 📨 ENVIAR PEDIDO (con token)
-  // ============================
   const enviarPedido = async () => {
+    if (!token) {
+      alert("Debes iniciar sesión para enviar tu pedido.");
+      return;
+    }
+
     if (!carrito.length) return alert("El carrito está vacío");
 
     const detalles = carrito.map((p) => ({
@@ -72,20 +79,15 @@ export default function Home() {
     const total = detalles.reduce((t, d) => t + d.subtotal, 0);
 
     try {
-      const res = await axios.post(
+      await axios.post(
         API_PEDIDOS,
         {
-          cliente: 1, // <-- luego cambiar por usuario logueado
+          cliente: 1, // cambiar luego por usuario logueado
           total,
           detalles,
         },
-        {
-          headers: {
-            Authorization: token ? `Bearer ${token}` : "",
-          },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-
       alert("Pedido enviado correctamente");
       setCarrito([]);
     } catch (e) {
@@ -94,9 +96,23 @@ export default function Home() {
     }
   };
 
+  // ==========================
+  // Filtrado de productos
+  // ==========================
+  const productosFiltrados = productos
+    .filter((p) =>
+      categoriaSeleccionada ? p.categoria === categoriaSeleccionada : true
+    )
+    .filter((p) =>
+      busqueda ? p.nombre.toLowerCase().includes(busqueda.toLowerCase()) : true
+    )
+    .filter((p) =>
+      precioMax ? p.precio_venta <= parseFloat(precioMax) : true
+    );
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex flex-col">
-      {/* Sección bienvenida */}
+      {/* Bienvenida / banner */}
       <motion.div
         initial={{ opacity: 0, y: -40 }}
         animate={{ opacity: 1, y: 0 }}
@@ -109,7 +125,57 @@ export default function Home() {
         <p className="text-gray-700 max-w-xl mx-auto">
           Compra medicamentos de calidad con atención personalizada y entrega rápida.
         </p>
+        {!token && (
+          <p className="mt-2 text-red-600 font-semibold">
+            Debes iniciar sesión para agregar productos al pedido.
+          </p>
+        )}
       </motion.div>
+
+      {/* Categorías */}
+      <motion.div
+        className="max-w-6xl mx-auto px-6 py-6 flex gap-4 overflow-x-auto"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.3, duration: 0.8 }}
+      >
+        {categorias.map((c) => (
+          <div
+            key={c.id}
+            onClick={() =>
+              setCategoriaSeleccionada(
+                categoriaSeleccionada === c.id ? null : c.id
+              )
+            }
+            className={`flex-none w-24 h-24 rounded-full flex items-center justify-center cursor-pointer transition-all
+              ${
+                categoriaSeleccionada === c.id
+                  ? "bg-blue-600 text-white shadow-lg"
+                  : "bg-white text-gray-700 shadow-md hover:shadow-lg"
+              }`}
+          >
+            {c.nombre}
+          </div>
+        ))}
+      </motion.div>
+
+      {/* Filtros */}
+      <div className="max-w-6xl mx-auto px-6 py-4 flex flex-col sm:flex-row gap-4 items-center">
+        <input
+          type="text"
+          placeholder="Buscar por nombre"
+          className="border rounded-lg p-2 flex-1"
+          value={busqueda}
+          onChange={(e) => setBusqueda(e.target.value)}
+        />
+        <input
+          type="number"
+          placeholder="Precio máximo"
+          className="border rounded-lg p-2 w-40"
+          value={precioMax}
+          onChange={(e) => setPrecioMax(e.target.value)}
+        />
+      </div>
 
       {/* Catálogo */}
       <motion.div
@@ -118,8 +184,8 @@ export default function Home() {
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5, duration: 1 }}
       >
-        {productos.length > 0 ? (
-          productos.map((p) => (
+        {productosFiltrados.length > 0 ? (
+          productosFiltrados.map((p) => (
             <motion.div
               key={p.id}
               whileHover={{ scale: 1.05 }}
@@ -135,7 +201,6 @@ export default function Home() {
               <p className="mt-3 text-lg font-bold text-green-600">
                 ${p.precio_venta?.toLocaleString("es-CO")}
               </p>
-
               <button
                 className="mt-3 w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700"
                 onClick={() => agregarAlCarrito(p)}
@@ -145,7 +210,9 @@ export default function Home() {
             </motion.div>
           ))
         ) : (
-          <p className="text-gray-600 text-lg col-span-3">Cargando medicamentos...</p>
+          <p className="text-gray-600 text-lg col-span-3">
+            No hay medicamentos para mostrar...
+          </p>
         )}
       </motion.div>
 
